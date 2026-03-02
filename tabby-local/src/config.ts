@@ -8,6 +8,8 @@ export class TerminalConfigProvider extends ConfigProvider {
             useConPTY: true,
             environment: {},
             setComSpec: false,
+            folderShortcutMaxVisible: 3,
+            folderShortcuts: [],
         },
     }
 
@@ -25,6 +27,16 @@ export class TerminalConfigProvider extends ConfigProvider {
         [Platform.Windows]: {
             terminal: {
                 profile: 'local:cmd-clink',
+                folderShortcuts: [
+                    {
+                        label: 'Compass',
+                        path: 'C:\\Users\\ionut\\Desktop\\therapy\\therapy-dashboard',
+                    },
+                    {
+                        label: 'Trading',
+                        path: 'C:\\Users\\ionut\\Desktop\\workspace\\New folder\\trading-app',
+                    },
+                ],
             },
             hotkeys: {
                 'new-tab': [

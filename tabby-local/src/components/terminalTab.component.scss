@@ -1,0 +1,43 @@
+:host.with-folder-shortcuts {
+    > .content {
+        margin-top: calc(max(0px, 30px * var(--spaciness) - 15px) + 24px);
+    }
+}
+
+.folder-shortcuts-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 8px;
+    background: rgba(0, 0, 0, .45);
+    border-bottom: 1px solid rgba(255, 255, 255, .12);
+    z-index: 4;
+}
+
+.shortcut-button {
+    padding: 0 6px;
+    border-radius: 3px;
+    border: 1px solid rgba(255, 255, 255, .15);
+    background: rgba(255, 255, 255, .08);
+    line-height: 16px;
+    height: 18px;
+    font-size: 11px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s ease-out;
+}
+
+.folder-shortcuts-bar:hover .shortcut-button,
+.folder-shortcuts-bar:focus-within .shortcut-button {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.shortcut-button:hover {
+    background: rgba(255, 255, 255, .18);
+}

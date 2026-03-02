@@ -15,3 +15,17 @@ h3.mb-3(translate) Shell
 
 .alert.alert-info.d-flex.align-items-center(*ngIf='config.store.terminal.profile.startsWith("WSL") && (!config.store.terminal.useConPTY)')
     .me-auto(translate) WSL terminal only supports TrueColor with ConPTY
+
+h3.mt-4.mb-3(translate) Folder shortcuts
+
+.mb-2.d-flex.align-items-center(*ngFor='let shortcut of folderShortcuts; let i = index')
+    .input-group
+        input.form-control([(ngModel)]='shortcut.label', (blur)='saveFolderShortcuts()', placeholder='Label')
+        input.form-control.text-monospace([(ngModel)]='shortcut.path', (blur)='saveFolderShortcuts()', placeholder='Path')
+        button.btn.btn-secondary((click)='removeFolderShortcut(i)')
+            i.fas.fa-fw.fa-trash
+
+.d-flex
+    button.btn.btn-secondary((click)='addFolderShortcut()')
+        i.fas.fa-plus.me-2
+        span(translate) Add shortcut

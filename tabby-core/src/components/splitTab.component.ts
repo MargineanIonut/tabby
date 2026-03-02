@@ -106,13 +106,21 @@ export class SplitContainer {
         return s
     }
 
-    async serialize (tabsRecovery: TabRecoveryService, options?: GetRecoveryTokenOptions): Promise<RecoveryToken> {
+    async serialize (
+        tabsRecovery: TabRecoveryService,
+        options?: GetRecoveryTokenOptions,
+        onChildSerialized?: (child: BaseTabComponent, token: RecoveryToken) => void,
+    ): Promise<RecoveryToken> {
         const children: any[] = []
         for (const child of this.children) {
             if (child instanceof SplitContainer) {
-                children.push(await child.serialize(tabsRecovery, options))
+                children.push(await child.serialize(tabsRecovery, options, onChildSerialized))
             } else {
-                children.push(await tabsRecovery.getFullRecoveryToken(child, options))
+                const token = await tabsRecovery.getFullRecoveryToken(child, options)
+                if (token) {
+                    onChildSerialized?.(child, token)
+                }
+                children.push(token)
             }
         }
         return {
@@ -223,6 +231,10 @@ export class SplitTabComponent extends BaseTabComponent implements AfterViewInit
     private focusedTab: BaseTabComponent|null = null
     private maximizedTab: BaseTabComponent|null = null
     private viewRefs: Map<BaseTabComponent, EmbeddedViewRef<any>> = new Map()
+    private paneCustomTitles = new Map<BaseTabComponent, string>()
+    private paneAutoIndexes = new Map<BaseTabComponent, number>()
+    private nextPaneAutoIndex = 1
+    private paneHeaderHeightPx = 24
 
     private tabAdded = new Subject<BaseTabComponent>()
     private tabAdopted = new Subject<BaseTabComponent>()
@@ -401,6 +413,45 @@ export class SplitTabComponent extends BaseTabComponent implements AfterViewInit
         return this.root.getAllTabs()
     }
 
+    getPaneHeaderHeightPx (): number {
+        return this.paneHeaderHeightPx
+    }
+
+    getPaneCustomTitle (tab: BaseTabComponent): string {
+        return this.paneCustomTitles.get(tab) ?? ''
+    }
+
+    getPaneDisplayTitle (tab: BaseTabComponent): string {
+        const customTitle = this.paneCustomTitles.get(tab)
+        if (customTitle) {
+            return customTitle
+        }
+        return `Terminal ${this.ensurePaneAutoIndex(tab)}`
+    }
+
+    setPaneCustomTitle (tab: BaseTabComponent, title: string): void {
+        if (!this.getAllTabs().includes(tab)) {
+            return
+        }
+        const sanitized = title.trim().slice(0, 32)
+        if (sanitized) {
+            this.paneCustomTitles.set(tab, sanitized)
+        } else {
+            this.paneCustomTitles.delete(tab)
+        }
+        this.recoveryStateChangedHint.next()
+    }
+
+    async closePane (tab: BaseTabComponent): Promise<void> {
+        if (!this.getAllTabs().includes(tab)) {
+            return
+        }
+        if (!await tab.canClose()) {
+            return
+        }
+        tab.destroy()
+    }
+
     getFocusedTab (): BaseTabComponent|null {
         return this.focusedTab
     }
@@ -539,6 +590,9 @@ export class SplitTabComponent extends BaseTabComponent implements AfterViewInit
         tab.removeFromContainer()
         tab.parent = null
         this.viewRefs.delete(tab)
+        this.paneCustomTitles.delete(tab)
+        this.paneAutoIndexes.delete(tab)
+        this.recoveryStateChangedHint.next()
 
         this.layout()
 
@@ -559,6 +613,19 @@ export class SplitTabComponent extends BaseTabComponent implements AfterViewInit
         parent.children[position] = newTab
         tab.removeFromContainer()
         this.attachTabView(newTab)
+        const customTitle = this.paneCustomTitles.get(tab)
+        if (customTitle) {
+            this.paneCustomTitles.set(newTab, customTitle)
+        }
+        const autoIndex = this.paneAutoIndexes.get(tab)
+        if (autoIndex) {
+            this.paneAutoIndexes.set(newTab, autoIndex)
+            this.nextPaneAutoIndex = Math.max(this.nextPaneAutoIndex, autoIndex + 1)
+        } else {
+            this.ensurePaneAutoIndex(newTab)
+        }
+        this.paneCustomTitles.delete(tab)
+        this.paneAutoIndexes.delete(tab)
         tab.parent = null
         newTab.parent = this
         this.recoveryStateChangedHint.next()
@@ -738,7 +805,12 @@ export class SplitTabComponent extends BaseTabComponent implements AfterViewInit
 
     /** @hidden */
     async getRecoveryToken (options?: GetRecoveryTokenOptions): Promise<any> {
-        return this.root.serialize(this.tabRecovery, options)
+        const token = await this.root.serialize(this.tabRecovery, options, (tab, childToken) => {
+            childToken.splitPaneCustomTitle = this.paneCustomTitles.get(tab) ?? ''
+            childToken.splitPaneAutoIndex = this.ensurePaneAutoIndex(tab)
+        })
+        token.splitNextPaneAutoIndex = this.nextPaneAutoIndex
+        return token
     }
 
     /** @hidden */
@@ -817,6 +889,30 @@ export class SplitTabComponent extends BaseTabComponent implements AfterViewInit
         this.root.equalize()
     }
 
+    private ensurePaneAutoIndex (tab: BaseTabComponent): number {
+        const existing = this.paneAutoIndexes.get(tab)
+        if (existing) {
+            return existing
+        }
+        const value = this.nextPaneAutoIndex
+        this.nextPaneAutoIndex++
+        this.paneAutoIndexes.set(tab, value)
+        return value
+    }
+
+    private applyRecoveredPaneMetadata (tab: BaseTabComponent, state: any): void {
+        if (typeof state.splitPaneCustomTitle === 'string' && state.splitPaneCustomTitle.trim()) {
+            this.paneCustomTitles.set(tab, state.splitPaneCustomTitle.trim().slice(0, 32))
+        }
+        if (typeof state.splitPaneAutoIndex === 'number' && Number.isFinite(state.splitPaneAutoIndex)) {
+            const autoIndex = Math.max(1, Math.floor(state.splitPaneAutoIndex))
+            this.paneAutoIndexes.set(tab, autoIndex)
+            this.nextPaneAutoIndex = Math.max(this.nextPaneAutoIndex, autoIndex + 1)
+        } else {
+            this.ensurePaneAutoIndex(tab)
+        }
+    }
+
     private updateTitle (): void {
         if (this.disableDynamicTitle) {
             return
@@ -880,6 +976,7 @@ export class SplitTabComponent extends BaseTabComponent implements AfterViewInit
     }
 
     private onAfterTabAdded (tab: BaseTabComponent) {
+        this.ensurePaneAutoIndex(tab)
         setImmediate(() => {
             this.layout()
             this.tabAdded.next(tab)
@@ -949,15 +1046,15 @@ export class SplitTabComponent extends BaseTabComponent implements AfterViewInit
                     element.classList.toggle('minimized', this.maximizedTab && child !== this.maximizedTab)
                     element.classList.toggle('focused', this._allFocusMode || child === this.focusedTab)
                     element.style.left = `${childX}%`
-                    element.style.top = `${childY}%`
+                    element.style.top = `calc(${childY}% + ${this.paneHeaderHeightPx}px)`
                     element.style.width = `${childW}%`
-                    element.style.height = `${childH}%`
+                    element.style.height = `calc(${childH}% - ${this.paneHeaderHeightPx}px)`
 
                     if (child === this.maximizedTab) {
                         element.style.left = '5%'
-                        element.style.top = '5%'
+                        element.style.top = `calc(5% + ${this.paneHeaderHeightPx}px)`
                         element.style.width = '90%'
-                        element.style.height = '90%'
+                        element.style.height = `calc(90% - ${this.paneHeaderHeightPx}px)`
                     }
                 }
             }
@@ -1046,11 +1143,15 @@ export class SplitTabComponent extends BaseTabComponent implements AfterViewInit
                     const tab = this.tabsService.create(recovered)
                     children.push(tab)
                     tab.parent = this
+                    this.applyRecoveredPaneMetadata(tab, childState)
                     this.attachTabView(tab)
                 } else {
                     state.ratios.splice(state.children.indexOf(childState), 0)
                 }
             }
+        }
+        if (state.splitNextPaneAutoIndex) {
+            this.nextPaneAutoIndex = Math.max(this.nextPaneAutoIndex, state.splitNextPaneAutoIndex)
         }
         while (root.ratios.length < root.children.length) {
             root.ratios.push(1)

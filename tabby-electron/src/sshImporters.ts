@@ -105,7 +105,9 @@ async function parseSSHConfigFile (
     try {
         raw = await fs.readFile(filePath, 'utf8')
     } catch (err) {
-        console.error(`Error reading SSH config file: ${filePath}`, err)
+        if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
+            console.error(`Error reading SSH config file: ${filePath}`, err)
+        }
         return SSHConfig.parse('')
     }
 

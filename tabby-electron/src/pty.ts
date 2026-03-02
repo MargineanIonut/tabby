@@ -104,6 +104,9 @@ export class ElectronPTYProxy extends PTYProxy {
 
     async getChildProcessesInternal (truePID: number): Promise<ChildProcess[]> {
         if (process.platform === 'darwin') {
+            if (!macOSNativeProcessList?.getProcessList) {
+                return []
+            }
             const processes = await macOSNativeProcessList.getProcessList()
             return processes.filter(x => x.ppid === truePID).map(p => ({
                 pid: p.pid,
@@ -112,6 +115,9 @@ export class ElectronPTYProxy extends PTYProxy {
             }))
         }
         if (process.platform === 'win32') {
+            if (!windowsProcessTree?.getProcessTree) {
+                return []
+            }
             return new Promise<ChildProcess[]>(resolve => {
                 windowsProcessTree.getProcessTree(truePID, tree => {
                     resolve(tree ? tree.children.map(child => ({

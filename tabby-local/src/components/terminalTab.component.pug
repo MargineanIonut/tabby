@@ -1,0 +1,19 @@
+.folder-shortcuts-bar(*ngIf='shouldShowFolderShortcutsBar')
+    button.btn.btn-sm.btn-link.shortcut-button(
+        *ngFor='let shortcut of visibleFolderShortcuts',
+        type='button',
+        (mousedown)='onFolderShortcutClick(shortcut.path, $event)'
+    ) {{ shortcut.label }}
+
+    .ms-auto(ngbDropdown, *ngIf='overflowFolderShortcuts.length > 0')
+        button.btn.btn-sm.btn-link.shortcut-button(
+            type='button',
+            ngbDropdownToggle
+        ) More
+        .bg-dark(ngbDropdownMenu)
+            button.dropdown-item(
+                *ngFor='let shortcut of overflowFolderShortcuts',
+                type='button',
+                ngbDropdownItem,
+                (mousedown)='onFolderShortcutClick(shortcut.path, $event)'
+            ) {{ shortcut.label }}

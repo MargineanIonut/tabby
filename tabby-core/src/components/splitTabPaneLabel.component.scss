@@ -1,36 +1,107 @@
 :host {
     position: absolute;
-    background: rgba(0, 0, 0, .5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    z-index: 10;
-    opacity: 0;
-    transition: .125s opacity cubic-bezier(0.86, 0, 0.07, 1);
+    pointer-events: auto;
+    z-index: 11;
 }
 
-div {
-    background: rgba(0, 0, 0, .7);
-    padding: 20px 30px;
-    margin: 20px;
-    font-size: 16px;
+.pane-header {
+    background: rgba(0, 0, 0, .45);
+    border-bottom: 1px solid rgba(255, 255, 255, .12);
+    padding: 0 8px;
+    font-size: 12px;
     color: #fff;
     display: flex;
     align-items: center;
-    border-radius: 5px;
-    cursor: move;
+    width: 100%;
+    height: 100%;
+    gap: 8px;
 }
 
-:host.active {
-    opacity: 1;
-
-    > div {
-        pointer-events: initial;
-    }
+.pane-header.focused {
+    background: rgba(0, 0, 0, .65);
 }
 
 label {
     margin: 0;
+    cursor: text;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.drag-handle {
+    color: rgba(255, 255, 255, .65);
+    font-size: 11px;
+    flex: 0 0 auto;
+    cursor: move;
+}
+
+input {
+    background: rgba(255, 255, 255, .15);
+    border: 1px solid rgba(255, 255, 255, .3);
+    color: #fff;
+    border-radius: 3px;
+    padding: 1px 6px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.close-pane-button {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, .8);
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    border-radius: 2px;
+}
+
+.close-pane-button:hover {
+    background: rgba(255, 255, 255, .15);
+    color: #fff;
+}
+
+.shortcut-button {
+    background: rgba(255, 255, 255, .08);
+    border: 1px solid rgba(255, 255, 255, .15);
+    color: #fff;
+    border-radius: 3px;
+    padding: 0 6px;
+    font-size: 11px;
+    line-height: 16px;
+    height: 18px;
+    flex: 0 0 auto;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s ease-out;
+}
+
+.shortcut-menu {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s ease-out;
+}
+
+.pane-header:hover .shortcut-button,
+.pane-header:hover .shortcut-menu,
+.pane-header:focus-within .shortcut-button,
+.pane-header:focus-within .shortcut-menu,
+.shortcut-menu.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.shortcut-button:hover {
+    background: rgba(255, 255, 255, .18);
+}
+
+.shortcut-menu ::ng-deep .dropdown-menu {
+    min-width: 140px;
+}
+
+:host.active .pane-header {
     cursor: move;
 }
