@@ -25,6 +25,21 @@ export class TabHeaderComponent extends BaseComponent {
     @Input() progress: number|null
     Platform = Platform
 
+    @HostBinding('class.agent-collection-unread') get hasAgentCollectionUnread (): boolean {
+        return this.getCollectionTabs().some(x => x.agentNotificationUnread)
+    }
+
+    @HostBinding('class.agent-terminal-flash') get hasAgentTerminalFlash (): boolean {
+        if (this.tab instanceof SplitTabComponent) {
+            return this.tab.getAllTabs().some(x => x.agentNotificationFlash)
+        }
+        return this.tab.agentNotificationUnread || this.tab.agentNotificationFlash
+    }
+
+    @HostBinding('class.agent-notify-static') get agentNotificationStatic (): boolean {
+        return !this.config.store.accessibility.animations && (this.hasAgentCollectionUnread || this.hasAgentTerminalFlash)
+    }
+
     constructor (
         public app: AppService,
         public config: ConfigService,
@@ -113,5 +128,12 @@ export class TabHeaderComponent extends BaseComponent {
     @HostListener('contextmenu', ['$event']) async onContextMenu ($event: MouseEvent) {
         $event.preventDefault()
         this.platform.popupContextMenu(await this.buildContextMenu(), $event)
+    }
+
+    private getCollectionTabs (): BaseTabComponent[] {
+        if (this.tab instanceof SplitTabComponent) {
+            return this.tab.getAllTabs()
+        }
+        return [this.tab]
     }
 }

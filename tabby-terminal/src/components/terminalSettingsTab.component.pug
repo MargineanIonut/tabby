@@ -205,6 +205,36 @@ div.mt-4
         button.btn.btn-secondary((click)='openWSLVolumeMixer()', translate) Show Mixer
 
 .mt-4
+    h3(translate) AI agent notifications
+
+    .form-line
+        .header
+            .title(translate) Enable AI agent completion notifications
+            .description(translate) Highlights collections and terminal headers when detected AI agent commands complete
+        toggle(
+            [(ngModel)]='config.store.terminal.agentNotifications.enabled',
+            (ngModelChange)='config.save()',
+        )
+
+    .form-line(*ngIf='config.store.terminal.agentNotifications.enabled')
+        .header
+            .title(translate) Agent command names
+            .description(translate) One command per line, used to detect AI agent sessions from foreground process names
+        textarea.form-control(
+            rows='4',
+            [(ngModel)]='agentDetectionCommandsText',
+        )
+
+    .form-line(*ngIf='config.store.terminal.agentNotifications.enabled')
+        .header
+            .title(translate) Completion output patterns
+            .description(translate) One pattern per line, matched case-insensitively as whole words in terminal output
+        textarea.form-control(
+            rows='4',
+            [(ngModel)]='agentCompletionPatternsText',
+        )
+
+.mt-4
     h3(translate) Startup
 
     .form-line(*ngIf='hostApp.platform !== Platform.Web')

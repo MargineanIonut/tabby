@@ -42,6 +42,7 @@ export class TabRecoveryService {
                 token.tabColor = tab.color
             }
             token.disableDynamicTitle = tab['disableDynamicTitle']
+            token.agentNotificationUnread = !!tab.agentNotificationUnread
         }
         return token
     }
@@ -59,6 +60,7 @@ export class TabRecoveryService {
                 tab.inputs.title = token.tabTitle || ''
                 tab.inputs.customTitle = token.tabCustomTitle || ''
                 tab.inputs.disableDynamicTitle = token.disableDynamicTitle
+                tab.inputs.agentNotificationUnread = !!token.agentNotificationUnread
                 return tab
             } catch (error) {
                 this.logger.warn('Tab recovery crashed:', token, provider, error)

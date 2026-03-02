@@ -20,6 +20,9 @@ interface FolderShortcut {
     <div
         class='pane-header'
         [class.focused]='parent.getFocusedTab() === tab'
+        [class.agent-notify-unread]='tab.agentNotificationUnread'
+        [class.agent-notify-flash]='tab.agentNotificationFlash'
+        [class.agent-notify-static]='!config.store.accessibility.animations'
         cdkDrag
         [cdkDragData]='tab'
         [cdkDragDisabled]='!isActive || isEditing'

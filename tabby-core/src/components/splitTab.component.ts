@@ -808,6 +808,7 @@ export class SplitTabComponent extends BaseTabComponent implements AfterViewInit
         const token = await this.root.serialize(this.tabRecovery, options, (tab, childToken) => {
             childToken.splitPaneCustomTitle = this.paneCustomTitles.get(tab) ?? ''
             childToken.splitPaneAutoIndex = this.ensurePaneAutoIndex(tab)
+            childToken.agentNotificationUnread = !!tab.agentNotificationUnread
         })
         token.splitNextPaneAutoIndex = this.nextPaneAutoIndex
         return token

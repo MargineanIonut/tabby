@@ -53,6 +53,11 @@ export class TerminalConfigProvider extends ConfigProvider {
             sixel: true,
             minimumContrastRatio: 4,
             trimWhitespaceOnPaste: true,
+            agentNotifications: {
+                enabled: true,
+                detectionCommands: ['claude', 'codex', 'aider', 'opencode', 'copilot'],
+                completionPatterns: ['done', 'completed', 'finished', 'success'],
+            },
         },
     }
 

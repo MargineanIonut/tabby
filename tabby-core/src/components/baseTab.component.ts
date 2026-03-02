@@ -61,6 +61,8 @@ export abstract class BaseTabComponent extends BaseComponent {
     private _icon: string|null = null
 
     hasFocus = false
+    agentNotificationUnread = false
+    agentNotificationFlash = false
 
     /**
      * Ping this if your recovery state has been changed and you want
@@ -178,6 +180,10 @@ export abstract class BaseTabComponent extends BaseComponent {
 
     emitBlurred (): void {
         this.blurred.next()
+    }
+
+    markRecoveryStateChanged (): void {
+        this.recoveryStateChangedHint.next()
     }
 
     /* @hidden */

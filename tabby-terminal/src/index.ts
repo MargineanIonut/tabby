@@ -26,6 +26,7 @@ import { TerminalContextMenuItemProvider } from './api/contextMenuProvider'
 import { TerminalColorSchemeProvider } from './api/colorSchemeProvider'
 import { TerminalSettingsTabProvider, AppearanceSettingsTabProvider, ColorSchemeSettingsTabProvider } from './settings'
 import { DebugDecorator } from './features/debug'
+import { AgentCompletionNotificationsDecorator } from './features/agentCompletionNotifications'
 import { ZModemDecorator } from './features/zmodem'
 import { TerminalConfigProvider } from './config'
 import { TerminalHotkeyProvider } from './hotkeys'
@@ -53,6 +54,7 @@ import { DefaultColorSchemes } from './colorSchemes'
 
         { provide: ConfigProvider, useClass: TerminalConfigProvider, multi: true },
         { provide: HotkeyProvider, useClass: TerminalHotkeyProvider, multi: true },
+        { provide: TerminalDecorator, useClass: AgentCompletionNotificationsDecorator, multi: true },
         { provide: TerminalDecorator, useClass: ZModemDecorator, multi: true },
         { provide: TerminalDecorator, useClass: DebugDecorator, multi: true },
 
